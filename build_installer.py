@@ -9,6 +9,7 @@ FILES = (
     'Download-Game.cmd', 'Download-Game.ps1', 'Download-Game.command',
     'Launch-Local.cmd', 'Start-Local.ps1', 'Launch-Local.command',
     'Verify-Game.cmd', 'Verify-Game.command', 'mac-launcher.sh',
+    'linux-launcher.sh', 'linux-install.sh', 'README-LINUX.md',
     'download_game.py', 'serve_local.py', 'verify_game.py',
     'download-manifest.json', 'file-inventory.json', 'SHA256SUMS.txt',
     'README.md', 'support/index.html', 'support/check.js',

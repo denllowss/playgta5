@@ -3,6 +3,9 @@ runtime/
 .downloads/
 .installed-parts/
 __pycache__/
+.local-run/
+.local-tls/
+playgta5-linux.conf
 *.log
 web-output/
 game-build-*/

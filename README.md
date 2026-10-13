@@ -1,6 +1,16 @@
 # PlayGTA5 — download, play, and troubleshoot
 
-[**Download installer ZIP**](https://github.com/alihammoud21/playgta5/releases/download/full-game-v1/PlayGTA5-Installer.zip) · [Installation](#download-and-play-on-windows) · [Mac](#download-and-play-on-mac) · [Higher-FPS setup](#performance--higher-fps) · [Report a problem](https://github.com/alihammoud21/playgta5/issues/new/choose)
+> **This copy adds first-class Linux support** on top of
+> [alihammoud21/playgta5](https://github.com/alihammoud21/playgta5): `linux-launcher.sh`
+> (a numbered 1/2/3 menu, plus one English command per action), `linux-install.sh`
+> (one-line install), `README-LINUX.md`, a case-insensitive filename fallback, HTTP/1.1
+> keep-alive, `--host/--tls` for LAN play, and `tests/test_posix_launcher.py`.
+> Windows and Mac paths are unchanged. Only the helper code lives in Git here - the ~21 GB of
+> game data stays in the release archives, and no copyrighted game file is committed.
+
+[**Download installer ZIP**](https://github.com/alihammoud21/playgta5/releases/download/full-game-v1/PlayGTA5-Installer.zip) · [Installation](#download-and-play-on-windows) · [Mac](#download-and-play-on-mac) · [Linux](#download-and-play-on-linux) · [Higher-FPS setup](#performance--higher-fps) · [Report a problem](https://github.com/alihammoud21/playgta5/issues/new/choose)
+
+**Ubuntu / Debian / Fedora / Arch / WSL2:** the same release works there with your distro's `python3` — see [Download and play on Linux](#download-and-play-on-linux) and [README-LINUX.md](README-LINUX.md). No bundled runtime is needed on Linux.
 
 **Want controllers, cheats, and the experimental development map?** Use the separate [**PlayGTA5 Enhanced** repository](https://github.com/alihammoud21/playgta5-enhanced). It reuses this installation and adds a launcher, standard-gamepad input bridge, cheat-code entry panel, and access to the existing `env_test` level. These are experimental additions.
 
@@ -13,7 +23,7 @@ The game data is approximately **21.2 GB (19.7 GiB)**. It is included in the rep
 | Current status | What has been checked |
 | --- | --- |
 | Full download | Fresh installation: 12,527 game/runtime files passed SHA-256 verification. |
-| Windows / Mac launch tools | Automated installation/server checks passed; Mac gameplay still needs hardware testing. |
+| Windows / Mac / Linux launch tools | Automated installation/server checks passed on all three; Mac and Linux gameplay still need hardware testing. |
 | Public game hosting | Vercel deployments are disabled. The replacement full-site upload failed and is being retried; no new link is gameplay-verified yet. |
 | Black world / GPU device loss | Reports remain under investigation; basic WebGPU checks do not prove world rendering. |
 | FPS | Presets below reduce rendering load. No universal 90–200 FPS result has been measured for this release. |
@@ -45,6 +55,49 @@ No Python installation, Netlify account, subscription, or API key is needed on W
 The launch/download scripts work with native Python on both Apple Silicon and Intel; Rosetta and the Windows executable are not required. **Mac gameplay is experimental and has not been validated on Mac hardware.** A working Python server does not establish GPU/renderer compatibility. Check the browser report and share any rendering errors in the issue tracker.
 
 For double-click launching, first run `chmod +x ./*.command` in that folder. If Finder will not open a script, use the Terminal commands above after reviewing the scripts; no system security setting needs to be disabled.
+
+## Download and play on Linux
+
+One command, then answer the numbered menu — it installs the game files, verifies them and
+starts the server for you:
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/denllowss/playgta5/main/linux-install.sh | sh
+```
+
+That fetches this repository into `~/playgta5` (choose another disk with
+`TARGET=/mnt/hdd2/playgta5 curl -fsSL … | sh`) and opens the menu:
+
+```text
+  1) Cek sistem & yang kurang                     check the machine first
+  2) Download game (±21 GB, bisa lanjut kalau putus)   download + SHA-256 verify
+  3) Verifikasi file game (SHA-256)              verify the installed files
+  4) Main sekarang (http://localhost:8000/)      serve and open the browser check page
+  5) Main dari HP / PC lain (LAN + HTTPS)         serve https://0.0.0.0:8000/
+  6) Main di latar belakang                      keep it running without a terminal
+  7) Status server   8) Berhentikan server       status / stop
+  9) Auto-start setiap login (systemd)           user service
+ 10) Pasang yang kurang (python, curl, git)      install missing packages
+ 11) Ganti folder game / port                    move the install to a second disk
+ 12) Jalankan test repository                    the project's own unit tests
+```
+
+The menu text is Indonesian because that is the language of the Linux guide
+([README-LINUX.md](README-LINUX.md)); every action also exists as a plain command for
+scripts and SSH sessions, and those are English:
+`./linux-launcher.sh check|download|verify|launch|lan|background|status|stop|service|deps|config|test|desktop`.
+Running the launcher without arguments on a non-terminal stdin prints the system report
+instead of a menu, so it is safe to call from a provisioning script.
+
+Requirements: **Python 3.11+** (`hashlib.file_digest` is used by the verifier), `curl` *or*
+`wget`, about **25 GB free** on ext4/xfs/btrfs, and a Chrome/Edge build with WebGPU. Ubuntu
+22.04/20.04 ship Python 3.10, so install `python3.11` from the deadsnakes PPA and prefix the
+commands with `PYTHON=python3.11` (menu 10 does it for you). If the ZIP was unpacked without
+preserving permissions, call the scripts as `sh linux-launcher.sh …` and then `chmod +x ./*.sh`.
+
+Nothing on Linux needs the bundled `runtime/python.exe`: menu 2 skips it, exactly as the Mac
+path does. **Linux gameplay has not been validated on hardware** - a working server proves the
+files, byte ranges and isolation headers, not that your GPU driver renders this build.
 
 ## Update an existing installation
 
@@ -100,7 +153,7 @@ mirror/
     data/
 ```
 
-Double-click `Launch-Local.cmd`. Do not open `index.html` directly: WebGPU workers, cross-origin isolation, and game-data reads require the included HTTP server.
+Double-click `Launch-Local.cmd` (Windows), run `bash Launch-Local.command` (Mac) or `./linux-launcher.sh launch` (Linux). Do not open `index.html` directly: WebGPU workers, cross-origin isolation, and game-data reads require the included HTTP server.
 
 ## Verify the files
 
@@ -110,7 +163,13 @@ The downloader does not overwrite existing files with different contents. If you
 
 ## Other operating systems
 
-On Linux, use Python 3.11+ with `python3 download_game.py`, then `python3 serve_local.py --open`. Browser/GPU support varies; Linux gameplay has not been validated. The bundled `runtime/python.exe` is Windows-only.
+Linux: use the section above - `curl -fsSL https://raw.githubusercontent.com/denllowss/playgta5/main/linux-install.sh | sh`
+opens the menu; the raw commands are `python3 download_game.py --root DIR` and
+`python3 serve_local.py --open --root DIR`.
+Browser/GPU support varies; Linux gameplay has not been validated. The bundled
+`runtime/python.exe` is Windows-only and is deliberately skipped on Linux and Mac. SteamOS
+and WSL2 follow the same commands; `serve_local.py --host 0.0.0.0 --tls` covers another
+device on the network. Android is untested.
 
 ## Online hosting and availability
 
@@ -143,7 +202,7 @@ For a useful issue report, include the **exact launch URL, last loading message,
 - **`memory access out of bounds`:** this is a WebAssembly memory-access error, not proof of insufficient physical RAM. Verify the files and capture the first error/stack trace, your installed RAM and GPU, mode/map, and the action or loading step that triggered it. The browser's memory estimate is not a measurement of installed RAM. See [issue #9](https://github.com/alihammoud21/playgta5/issues/9).
 - **Stuck at 24%:** first distinguish the installer's download percentage from the in-game loading percentage. Confirm all 14 parts installed, run verification, then collect the first red console error and any failed Network request with its HTTP status. See [issue #10](https://github.com/alihammoud21/playgta5/issues/10).
 - **Low FPS:** start at `?low=1&fps=30&res=1280x720`. If stable, compare `?low=1&fps=60&res=1280x720` or `?low=1&fps=60&res=960x540` in the same place after shader preparation. The `fps` value is a cap, not a performance guarantee. Check the active GPU in `chrome://gpu` / `edge://gpu`. Native GTA V and this browser build can perform differently.
-- **LAN / port forwarding:** the supplied server binds to `127.0.0.1`. A plain `http://<PC-IP>:8000` address does not get localhost's secure-context exception. Remote hosting needs trusted HTTPS and the isolation headers; forwarding a port or changing browsers alone does not supply them. Use the public HTTPS site or a correctly configured HTTPS reverse proxy. Android gameplay remains untested.
+- **LAN / port forwarding:** the supplied server binds to `127.0.0.1`. A plain `http://<PC-IP>:8000` address does not get localhost's secure-context exception. Remote hosting needs trusted HTTPS and the isolation headers; forwarding a port or changing browsers alone does not supply them. Use the public HTTPS site, `serve_local.py --host 0.0.0.0 --tls`, or a correctly configured HTTPS reverse proxy. Android gameplay remains untested.
 - **Graphics device lost / `DXGI_ERROR_DEVICE_HUNG`:** this reports a GPU device failure. Close all game tabs, stop the game server with Ctrl+C, then restart once. Update the browser and GPU driver (macOS updates include its drivers), and check `chrome://gpu` or `edge://gpu` for hardware acceleration and Problems Detected. Try the lower-memory 720p link. Do not change Windows TDR registry settings or enable unsafe browser flags. If it persists, post your GPU model, OS/browser versions, when it happens, and the first console error to [issue #1](https://github.com/alihammoud21/playgta5/issues/1). The exact cause is still under investigation.
 - **Black world but audio/map/menu work:** verify the files, try the lower-memory link, and compare Story and Sandbox. Open developer tools (F12 on Windows, Option+Command+I on Mac), capture the first shader/WebGPU error and any failed asset request, and post them with the compatibility report to [issue #2](https://github.com/alihammoud21/playgta5/issues/2). HUD rendering alone does not prove that world rendering is working. Do not delete saves as a first troubleshooting step.
 - **Download failure:** rerun `Download-Game.cmd`. Completed, verified archives are remembered. Available disk space and network restrictions can affect downloading.
@@ -156,4 +215,6 @@ The compatibility page checks WebAssembly Memory64, basic WebGPU device creation
 
 ## Development checks
 
-Run `python3 -m unittest discover -s tests -v`, `node --check support/check.js`, and `bash -n mac-launcher.sh`. Tests cover the installer bundle, preservation/resume, checksums, unsafe paths, isolation headers, range reads, both batch formats, malformed requests, hosted startup checks, and cached piece reconstruction. With Node 24+, `node tests/check_hosted_transport.cjs https://YOUR_PROJECT.pages.dev` checks deployed headers, cross-piece ranges, the complete engine checksum, streaming compilation, and real 404 responses against the local mirror. This is a network/engine test, not a gameplay test. An existing mirror can be tested without copying it: `python3 serve_local.py --root /path/to/playgta5.com --port 8001 --open`.
+Run `python3 -m unittest discover -s tests -v`, `node --check support/check.js`, `bash -n mac-launcher.sh`, and `sh -n linux-launcher.sh linux-install.sh` (Ubuntu's `/bin/sh` is dash, so the launcher must stay POSIX). Tests cover the installer bundle, preservation/resume, checksums, unsafe paths, isolation headers, range reads, both batch formats, malformed requests, hosted startup checks, and cached piece reconstruction. With Node 24+, `node tests/check_hosted_transport.cjs https://YOUR_PROJECT.pages.dev` checks deployed headers, cross-piece ranges, the complete engine checksum, streaming compilation, and real 404 responses against the local mirror. This is a network/engine test, not a gameplay test. An existing mirror can be tested without copying it: `python3 serve_local.py --root /path/to/playgta5.com --port 8001 --open`. `python3 serve_local.py --check` reports which mirror folder was picked up (`--root`, then `$PLAYGTA5_MIRROR`, then `./mirror/playgta5.com`).
+
+`tests/test_posix_launcher.py` covers the Linux path specifically: POSIX syntax of every shell entry point (Ubuntu's `/bin/sh` is dash), LF-only line endings, the installer bundle carrying `linux-launcher.sh` with its executable bit, the case-insensitive filename fallback, HTTP/1.1 keep-alive staying in sync after a refused batch, headless browser opening, and a real `download_game.install()` run against a local HTTP server including resume, archive reuse, and corrupt-archive rejection.
